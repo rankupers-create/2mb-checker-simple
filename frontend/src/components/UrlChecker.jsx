@@ -3,6 +3,9 @@ import { Search, ExternalLink, Info, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import ResultsPanel from './ResultsPanel';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const UrlChecker = () => {
   const [url, setUrl] = useState('');
@@ -41,43 +44,22 @@ const UrlChecker = () => {
 
     setLoading(true);
     
-    // Simulated analysis - will be replaced with actual backend call
-    setTimeout(() => {
-      const mockResult = {
-        url: checkUrl,
-        status: Math.random() > 0.3 ? 'pass' : Math.random() > 0.5 ? 'warning' : 'fail',
-        htmlSize: Math.floor(Math.random() * 2500000) + 100000,
-        htmlSizeCompressed: Math.floor(Math.random() * 500000) + 50000,
-        totalResources: Math.floor(Math.random() * 50) + 10,
-        resourcesDetails: [
-          { type: 'JavaScript', count: Math.floor(Math.random() * 15) + 3, totalSize: Math.floor(Math.random() * 1000000) + 100000 },
-          { type: 'CSS', count: Math.floor(Math.random() * 10) + 2, totalSize: Math.floor(Math.random() * 300000) + 50000 },
-          { type: 'Images', count: Math.floor(Math.random() * 20) + 5, totalSize: Math.floor(Math.random() * 3000000) + 500000 },
-          { type: 'Fonts', count: Math.floor(Math.random() * 5) + 1, totalSize: Math.floor(Math.random() * 200000) + 30000 },
-        ],
-        loadTime: (Math.random() * 5 + 0.5).toFixed(2),
-        truncatedContent: false,
-        crawlabilityScore: Math.floor(Math.random() * 40) + 60,
-        timestamp: new Date().toISOString()
-      };
-
-      // Determine status based on size
-      const limit = 2097152; // 2MB
-      if (mockResult.htmlSize > limit) {
-        mockResult.status = 'fail';
-        mockResult.truncatedContent = true;
-        mockResult.truncatedAt = limit;
-        mockResult.crawlabilityScore = Math.floor(Math.random() * 30) + 10;
-      } else if (mockResult.htmlSize > limit * 0.8) {
-        mockResult.status = 'warning';
-        mockResult.crawlabilityScore = Math.floor(Math.random() * 20) + 50;
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/analyze`, {
+        url: checkUrl
+      });
+      setResult(response.data);
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.detail) {
+        setError(err.response.data.detail);
+      } else if (err.message) {
+        setError(err.message);
       } else {
-        mockResult.status = 'pass';
+        setError('An error occurred while analyzing the URL');
       }
-
-      setResult(mockResult);
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   return (
