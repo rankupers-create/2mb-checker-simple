@@ -154,6 +154,107 @@ async def get_status_checks():
     
     return status_checks
 
+@api_router.post("/analyze", response_model=UrlAnalyzeResponse)
+async def analyze_url(request: UrlAnalyzeRequest):
+    """Analyze a URL to check if it exceeds Google's 2MB crawl limit"""
+    url = request.url.strip()
+    
+    # Add https:// if no protocol specified
+    if not url.startswith('http://') and not url.startswith('https://'):
+        url = 'https://' + url
+    
+    # Validate URL format
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            raise ValueError("Invalid URL format")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid URL format")
+    
+    try:
+        start_time = time.time()
+        
+        # Fetch the URL with a timeout and user agent
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; 2MB-Checker/1.0; +https://seo-size-validator.preview.emergentagent.com)',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive',
+        }
+        
+        response = requests.get(url, headers=headers, timeout=30, allow_redirects=True)
+        response.raise_for_status()
+        
+        load_time = round(time.time() - start_time, 2)
+        
+        # Get the HTML content
+        html_content = response.text
+        html_bytes = html_content.encode('utf-8')
+        html_size = len(html_bytes)
+        
+        # Calculate compressed size
+        compressed_content = gzip.compress(html_bytes)
+        html_size_compressed = len(compressed_content)
+        
+        # Analyze resources in HTML
+        resources = analyze_html_resources(html_content, url)
+        
+        # Build resource details list
+        resources_details = []
+        total_resources = 0
+        for res_type, data in resources.items():
+            if data['count'] > 0 or data['totalSize'] > 0:
+                resources_details.append(ResourceDetail(
+                    type=res_type,
+                    count=data['count'],
+                    totalSize=data['totalSize']
+                ))
+                total_resources += data['count']
+        
+        # Determine status
+        if html_size > GOOGLEBOT_LIMIT:
+            status = "fail"
+            truncated_content = True
+            truncated_at = GOOGLEBOT_LIMIT
+        elif html_size > GOOGLEBOT_LIMIT * WARNING_THRESHOLD:
+            status = "warning"
+            truncated_content = False
+            truncated_at = None
+        else:
+            status = "pass"
+            truncated_content = False
+            truncated_at = None
+        
+        # Calculate crawlability score
+        crawlability_score = calculate_crawlability_score(html_size)
+        
+        return UrlAnalyzeResponse(
+            url=url,
+            status=status,
+            htmlSize=html_size,
+            htmlSizeCompressed=html_size_compressed,
+            totalResources=total_resources,
+            resourcesDetails=resources_details,
+            loadTime=load_time,
+            truncatedContent=truncated_content,
+            truncatedAt=truncated_at,
+            crawlabilityScore=crawlability_score,
+            timestamp=datetime.now(timezone.utc).isoformat()
+        )
+        
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=408, detail="Request timeout - the URL took too long to respond")
+    except requests.exceptions.SSLError:
+        raise HTTPException(status_code=400, detail="SSL certificate error - unable to verify the website's security certificate")
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(status_code=400, detail="Connection error - unable to connect to the URL")
+    except requests.exceptions.HTTPError as e:
+        raise HTTPException(status_code=400, detail=f"HTTP error: {e.response.status_code} - {e.response.reason}")
+    except Exception as e:
+        logger.error(f"Error analyzing URL {url}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing URL: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
