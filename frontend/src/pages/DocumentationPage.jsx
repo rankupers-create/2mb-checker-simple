@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 import { documentationContent } from '../data/mock';
 import { 
   Info, FileText, TrendingUp, Database, Wrench, Search, 
@@ -28,6 +29,13 @@ const DocumentationPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
+      <SEO 
+        title="Google's 2MB Crawl Limit Explained - Complete SEO Guide | Googlebot Documentation"
+        description="Learn everything about Google's 2MB crawl limit for Googlebot. Understand what counts towards the limit, how it affects SEO, and get expert tips to optimize your pages for better indexing."
+        keywords="googlebot 2mb limit, google crawl limit explained, seo documentation, googlebot indexing, html size limit google, crawl budget optimization, search engine crawling, website indexing guide"
+        canonical="/documentation"
+        type="article"
+      />
       <Header />
       <main className="flex-1 container max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
         {/* Hero Section */}
