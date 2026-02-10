@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Globe, Heart, FileText, Home } from 'lucide-react';
+import { Globe, FileText, Home } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
