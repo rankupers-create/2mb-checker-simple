@@ -1,9 +1,10 @@
 import React from 'react';
 import { CheckCircle2, AlertTriangle, XCircle, FileText, Clock, Gauge, ArrowRight, TrendingDown, TrendingUp, Zap } from 'lucide-react';
-import { Progress } from './ui/progress';
 import { formatBytes, calculatePercentage } from '../data/mock';
+import { useLanguage } from '../context/LanguageContext';
 
 const ResultsPanel = ({ result }) => {
+  const { t } = useLanguage();
   const limit = 2097152; // 2MB in bytes
   const percentage = calculatePercentage(result.htmlSize);
   
@@ -16,8 +17,8 @@ const ResultsPanel = ({ result }) => {
           bgColor: 'bg-green-50',
           borderColor: 'border-green-200',
           progressColor: 'bg-green-500',
-          title: 'All Clear!',
-          message: 'Your page is within Google\'s 2MB crawl limit. All content should be indexed properly.'
+          title: t.allClear,
+          message: t.allClearMsg
         };
       case 'warning':
         return {
@@ -26,8 +27,8 @@ const ResultsPanel = ({ result }) => {
           bgColor: 'bg-amber-50',
           borderColor: 'border-amber-200',
           progressColor: 'bg-amber-500',
-          title: 'Approaching Limit',
-          message: 'Your page is close to the 2MB limit. Consider optimizing to ensure all content is indexed.'
+          title: t.approachingLimit,
+          message: t.approachingLimitMsg
         };
       case 'fail':
         return {
@@ -36,8 +37,8 @@ const ResultsPanel = ({ result }) => {
           bgColor: 'bg-red-50',
           borderColor: 'border-red-200',
           progressColor: 'bg-red-500',
-          title: 'Limit Exceeded!',
-          message: 'Your page exceeds the 2MB limit. Content after the cutoff will NOT be indexed by Google.'
+          title: t.limitExceeded,
+          message: t.limitExceededMsg
         };
       default:
         return {
@@ -46,8 +47,8 @@ const ResultsPanel = ({ result }) => {
           bgColor: 'bg-gray-50',
           borderColor: 'border-gray-200',
           progressColor: 'bg-gray-500',
-          title: 'Analysis Complete',
-          message: 'Review the results below.'
+          title: t.analysisComplete,
+          message: t.reviewResults
         };
     }
   };
@@ -69,14 +70,14 @@ const ResultsPanel = ({ result }) => {
             
             {/* URL */}
             <div className="bg-white/50 rounded-lg px-3 py-2 mb-4 inline-block">
-              <span className="text-sm text-gray-500">Analyzed URL: </span>
+              <span className="text-sm text-gray-500">{t.analyzedUrl} </span>
               <span className="text-sm font-medium text-gray-800">{result.url}</span>
             </div>
 
             {/* Size Progress Bar */}
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">HTML Size</span>
+                <span className="text-gray-600">{t.htmlSize}</span>
                 <span className="font-medium text-gray-900">
                   {formatBytes(result.htmlSize)} / {formatBytes(limit)}
                 </span>
@@ -89,7 +90,7 @@ const ResultsPanel = ({ result }) => {
               </div>
               <div className="flex justify-between text-xs text-gray-500">
                 <span>0 MB</span>
-                <span>{percentage.toFixed(1)}% of limit</span>
+                <span>{percentage.toFixed(1)}% {t.ofLimit}</span>
                 <span>2 MB</span>
               </div>
             </div>
@@ -102,34 +103,34 @@ const ResultsPanel = ({ result }) => {
         <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 text-gray-500 mb-2">
             <FileText size={16} />
-            <span className="text-sm">HTML Size</span>
+            <span className="text-sm">{t.htmlSize}</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{formatBytes(result.htmlSize)}</p>
-          <p className="text-xs text-gray-500 mt-1">Uncompressed</p>
+          <p className="text-xs text-gray-500 mt-1">{t.uncompressed}</p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 text-gray-500 mb-2">
             <Zap size={16} />
-            <span className="text-sm">Compressed</span>
+            <span className="text-sm">{t.compressed}</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{formatBytes(result.htmlSizeCompressed)}</p>
-          <p className="text-xs text-gray-500 mt-1">Gzip size</p>
+          <p className="text-xs text-gray-500 mt-1">{t.gzipSize}</p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 text-gray-500 mb-2">
             <Clock size={16} />
-            <span className="text-sm">Load Time</span>
+            <span className="text-sm">{t.loadTime}</span>
           </div>
           <p className="text-2xl font-bold text-gray-900">{result.loadTime}s</p>
-          <p className="text-xs text-gray-500 mt-1">Estimated</p>
+          <p className="text-xs text-gray-500 mt-1">{t.estimated}</p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-2 text-gray-500 mb-2">
             <Gauge size={16} />
-            <span className="text-sm">Crawl Score</span>
+            <span className="text-sm">{t.crawlScore}</span>
           </div>
           <p className={`text-2xl font-bold ${
             result.crawlabilityScore >= 70 ? 'text-green-600' :
@@ -137,7 +138,7 @@ const ResultsPanel = ({ result }) => {
           }`}>
             {result.crawlabilityScore}/100
           </p>
-          <p className="text-xs text-gray-500 mt-1">Crawlability</p>
+          <p className="text-xs text-gray-500 mt-1">{t.crawlability}</p>
         </div>
       </div>
 
@@ -145,7 +146,7 @@ const ResultsPanel = ({ result }) => {
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <TrendingUp size={20} className="text-blue-500" />
-          Resources Breakdown
+          {t.resourcesBreakdown}
         </h3>
         <div className="space-y-4">
           {result.resourcesDetails.map((resource, index) => {
@@ -155,7 +156,7 @@ const ResultsPanel = ({ result }) => {
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium text-gray-700">{resource.type}</span>
                   <span className="text-sm text-gray-500">
-                    {resource.count} files • {formatBytes(resource.totalSize)}
+                    {resource.count} {t.files} • {formatBytes(resource.totalSize)}
                   </span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -176,16 +177,15 @@ const ResultsPanel = ({ result }) => {
           <div className="flex items-start gap-3">
             <TrendingDown size={24} className="text-red-500 flex-shrink-0" />
             <div>
-              <h4 className="font-semibold text-red-800 mb-1">Content Truncation Detected</h4>
+              <h4 className="font-semibold text-red-800 mb-1">{t.truncationDetected}</h4>
               <p className="text-sm text-red-700 mb-3">
-                Googlebot will stop crawling at byte {formatBytes(result.truncatedAt)}. 
-                Approximately {formatBytes(result.htmlSize - result.truncatedAt)} of your content 
-                will NOT be indexed.
+                {t.truncationMsg} {formatBytes(result.truncatedAt)}. 
+                {t.truncationMsg2} {formatBytes(result.htmlSize - result.truncatedAt)} {t.truncationMsg3}
               </p>
               <div className="bg-red-100 rounded-lg p-3">
                 <p className="text-xs text-red-800 font-medium">
-                  "Once the limit is reached, Googlebot interrupts the retrieval and sends only the downloaded part for indexing."
-                  <span className="block mt-1 font-normal">— Google Search Central</span>
+                  {t.googleQuote}
+                  <span className="block mt-1 font-normal">{t.googleQuoteSource}</span>
                 </p>
               </div>
             </div>
@@ -197,18 +197,18 @@ const ResultsPanel = ({ result }) => {
       <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <ArrowRight size={20} className="text-blue-500" />
-          Recommendations
+          {t.recommendations}
         </h3>
         <ul className="space-y-3">
           {result.status === 'pass' && (
             <>
               <li className="flex items-start gap-2 text-gray-700">
                 <CheckCircle2 size={18} className="text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Your HTML is within the safe limit - great job!</span>
+                <span>{t.recPass1}</span>
               </li>
               <li className="flex items-start gap-2 text-gray-700">
                 <CheckCircle2 size={18} className="text-green-500 mt-0.5 flex-shrink-0" />
-                <span>Continue monitoring after major content updates</span>
+                <span>{t.recPass2}</span>
               </li>
             </>
           )}
@@ -216,15 +216,15 @@ const ResultsPanel = ({ result }) => {
             <>
               <li className="flex items-start gap-2 text-gray-700">
                 <AlertTriangle size={18} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                <span>Consider removing inline JavaScript and CSS</span>
+                <span>{t.recWarning1}</span>
               </li>
               <li className="flex items-start gap-2 text-gray-700">
                 <AlertTriangle size={18} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                <span>Minify your HTML output to reduce size</span>
+                <span>{t.recWarning2}</span>
               </li>
               <li className="flex items-start gap-2 text-gray-700">
                 <AlertTriangle size={18} className="text-amber-500 mt-0.5 flex-shrink-0" />
-                <span>Prioritize important content at the top of the page</span>
+                <span>{t.recWarning3}</span>
               </li>
             </>
           )}
@@ -232,19 +232,19 @@ const ResultsPanel = ({ result }) => {
             <>
               <li className="flex items-start gap-2 text-gray-700">
                 <XCircle size={18} className="text-red-500 mt-0.5 flex-shrink-0" />
-                <span><strong>Urgent:</strong> Move inline CSS and JavaScript to external files</span>
+                <span>{t.recFail1}</span>
               </li>
               <li className="flex items-start gap-2 text-gray-700">
                 <XCircle size={18} className="text-red-500 mt-0.5 flex-shrink-0" />
-                <span>Remove HTML comments and unnecessary whitespace</span>
+                <span>{t.recFail2}</span>
               </li>
               <li className="flex items-start gap-2 text-gray-700">
                 <XCircle size={18} className="text-red-500 mt-0.5 flex-shrink-0" />
-                <span>Implement pagination for long content</span>
+                <span>{t.recFail3}</span>
               </li>
               <li className="flex items-start gap-2 text-gray-700">
                 <XCircle size={18} className="text-red-500 mt-0.5 flex-shrink-0" />
-                <span>Ensure critical SEO content appears in the first 2MB</span>
+                <span>{t.recFail4}</span>
               </li>
             </>
           )}
