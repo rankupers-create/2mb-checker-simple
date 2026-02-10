@@ -1,40 +1,72 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { translations, defaultLanguage } from '../data/translations';
 
 const LanguageContext = createContext();
 
+// Supported language codes
+const supportedLanguages = ['en', 'de', 'el', 'es', 'fr'];
+
+// Extract language from pathname
+const getLanguageFromPath = (pathname) => {
+  const pathParts = pathname.split('/').filter(Boolean);
+  if (pathParts.length > 0 && supportedLanguages.includes(pathParts[0]) && pathParts[0] !== 'en') {
+    return pathParts[0];
+  }
+  return 'en'; // Default to English
+};
+
+// Get path without language prefix
+const getPathWithoutLang = (pathname) => {
+  const pathParts = pathname.split('/').filter(Boolean);
+  if (pathParts.length > 0 && supportedLanguages.includes(pathParts[0]) && pathParts[0] !== 'en') {
+    return '/' + pathParts.slice(1).join('/') || '/';
+  }
+  return pathname;
+};
+
 export const LanguageProvider = ({ children }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
   const [language, setLanguage] = useState(() => {
-    // Check URL parameter first
-    const urlParams = new URLSearchParams(window.location.search);
-    const langParam = urlParams.get('lang');
-    if (langParam && translations[langParam]) {
-      return langParam;
-    }
-    // Check localStorage
-    const savedLang = localStorage.getItem('language');
-    if (savedLang && translations[savedLang]) {
-      return savedLang;
-    }
-    // Check browser language
-    const browserLang = navigator.language.split('-')[0];
-    if (translations[browserLang]) {
-      return browserLang;
-    }
-    return defaultLanguage;
+    return getLanguageFromPath(location.pathname);
   });
+
+  // Update language when URL changes
+  useEffect(() => {
+    const pathLang = getLanguageFromPath(location.pathname);
+    if (pathLang !== language) {
+      setLanguage(pathLang);
+    }
+  }, [location.pathname, language]);
 
   const t = translations[language] || translations[defaultLanguage];
 
   const changeLanguage = (newLang) => {
     if (translations[newLang]) {
+      const currentPath = getPathWithoutLang(location.pathname);
+      let newPath;
+      
+      if (newLang === 'en') {
+        // English goes to root
+        newPath = currentPath || '/';
+      } else {
+        // Other languages get prefix
+        newPath = `/${newLang}${currentPath === '/' ? '' : currentPath}`;
+      }
+      
+      navigate(newPath);
       setLanguage(newLang);
-      localStorage.setItem('language', newLang);
-      // Update URL without reload
-      const url = new URL(window.location);
-      url.searchParams.set('lang', newLang);
-      window.history.pushState({}, '', url);
     }
+  };
+
+  // Helper function to get localized path
+  const getLocalizedPath = (path) => {
+    if (language === 'en') {
+      return path;
+    }
+    return `/${language}${path === '/' ? '' : path}`;
   };
 
   useEffect(() => {
@@ -43,7 +75,7 @@ export const LanguageProvider = ({ children }) => {
   }, [language]);
 
   return (
-    <LanguageContext.Provider value={{ language, changeLanguage, t }}>
+    <LanguageContext.Provider value={{ language, changeLanguage, t, getLocalizedPath }}>
       {children}
     </LanguageContext.Provider>
   );
