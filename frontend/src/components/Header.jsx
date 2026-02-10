@@ -15,7 +15,7 @@ const Header = () => {
               G
             </div>
             <span className="font-semibold text-gray-800 text-lg tracking-tight">
-              G-Bot Limit Checker
+              Google Bot Limit Checker
             </span>
           </Link>
 
