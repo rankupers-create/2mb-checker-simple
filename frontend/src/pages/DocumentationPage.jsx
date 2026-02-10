@@ -48,10 +48,10 @@ const DocumentationPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
       <SEO 
-        title={`${t.docTitle} | Google Bot Limit Checker`}
+        title={`${t.docTitle} | ${t.appName}`}
         description={t.docIntro}
         keywords="googlebot 2mb limit, google crawl limit explained, seo documentation, googlebot indexing, html size limit google, crawl budget optimization, search engine crawling, website indexing guide"
-        canonical="/documentation"
+        path="/documentation"
         type="article"
       />
       <Header />
