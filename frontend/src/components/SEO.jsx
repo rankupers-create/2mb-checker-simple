@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
 const SEO = ({ 
@@ -16,14 +16,14 @@ const SEO = ({
   const localizedPath = getLocalizedPath(path);
   const fullCanonical = `${siteUrl}${localizedPath}`;
   
-  // Generate hreflang URLs for all languages
-  const hreflangUrls = {
+  // Generate hreflang URLs for all languages (memoized)
+  const hreflangUrls = useMemo(() => ({
     en: `${siteUrl}${path}`,
     de: `${siteUrl}/de${path === '/' ? '' : path}`,
     el: `${siteUrl}/el${path === '/' ? '' : path}`,
     es: `${siteUrl}/es${path === '/' ? '' : path}`,
     fr: `${siteUrl}/fr${path === '/' ? '' : path}`,
-  };
+  }), [path, siteUrl]);
   
   useEffect(() => {
     // Update document title
