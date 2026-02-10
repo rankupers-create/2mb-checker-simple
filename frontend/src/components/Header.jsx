@@ -52,9 +52,6 @@ const Header = () => {
               <Globe size={16} />
               <span className="hidden sm:inline">Google Docs</span>
             </a>
-            <button className="ml-2 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-              <Heart size={18} fill="currentColor" />
-            </button>
           </nav>
         </div>
       </div>
