@@ -3,6 +3,7 @@ import { Search, ExternalLink, Info, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import ResultsPanel from './ResultsPanel';
+import { useLanguage } from '../context/LanguageContext';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -12,6 +13,7 @@ const UrlChecker = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const { t } = useLanguage();
 
   const validateUrl = (url) => {
     try {
@@ -28,7 +30,7 @@ const UrlChecker = () => {
     setResult(null);
 
     if (!url.trim()) {
-      setError('Please enter a URL');
+      setError(t.enterUrl);
       return;
     }
 
@@ -38,7 +40,7 @@ const UrlChecker = () => {
     }
 
     if (!validateUrl(checkUrl)) {
-      setError('Please enter a valid URL');
+      setError(t.invalidUrl);
       return;
     }
 
@@ -67,11 +69,11 @@ const UrlChecker = () => {
       {/* Hero Section */}
       <div className="text-center mb-10">
         <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-          Google's crawl limit is now{' '}
-          <span className="text-blue-600">2 MB</span>.
+          {t.heroTitle}{' '}
+          <span className="text-blue-600">{t.heroTitleHighlight}</span>.
         </h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Check if your HTML content is being cut off by the indexing bot.
+          {t.heroSubtitle}
         </p>
       </div>
 
@@ -87,7 +89,7 @@ const UrlChecker = () => {
                 type="text"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Enter URL (e.g. https://example.com)"
+                placeholder={t.placeholder}
                 className="flex-1 border-0 bg-transparent text-lg placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 h-12"
               />
               <Button
@@ -98,10 +100,10 @@ const UrlChecker = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Analyzing...
+                    {t.analyzing}
                   </>
                 ) : (
-                  'Check Now'
+                  t.checkNow
                 )}
               </Button>
             </div>
@@ -115,12 +117,12 @@ const UrlChecker = () => {
         {/* Official Documentation Link */}
         <div className="text-center mt-4">
           <a
-            href="https://developers.google.com/search/docs/crawling-indexing/googlebot"
+            href={t.googleDocsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
           >
-            Official Googlebot Documentation
+            {t.officialDocs}
             <ExternalLink size={14} />
           </a>
         </div>
@@ -129,16 +131,16 @@ const UrlChecker = () => {
         <div className="mt-6 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-3">
           <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
           <p className="text-sm text-gray-700">
-            <strong className="text-gray-800">Tip:</strong> For a robust, bulk analysis, use{' '}
+            <strong className="text-gray-800">{t.tipTitle}</strong> {t.tipText}{' '}
             <a
               href="https://www.screamingfrog.co.uk/seo-spider/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:underline"
             >
-              Screaming Frog
+              {t.screamingFrog}
             </a>{' '}
-            which simulates this limit perfectly.
+            {t.tipTextEnd}
           </p>
         </div>
       </div>
