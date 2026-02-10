@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Globe, FileText, Home } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import LanguageSelector from './LanguageSelector';
 
 const Header = () => {
   const location = useLocation();
+  const { t } = useLanguage();
 
   return (
     <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -15,7 +18,7 @@ const Header = () => {
               G
             </div>
             <span className="font-semibold text-gray-800 text-lg tracking-tight">
-              Google Bot Limit Checker
+              {t.appName}
             </span>
           </Link>
 
@@ -30,7 +33,7 @@ const Header = () => {
               }`}
             >
               <Home size={16} />
-              <span className="hidden sm:inline">Home</span>
+              <span className="hidden sm:inline">{t.home}</span>
             </Link>
             <Link
               to="/documentation"
@@ -41,17 +44,20 @@ const Header = () => {
               }`}
             >
               <FileText size={16} />
-              <span className="hidden sm:inline">Documentation</span>
+              <span className="hidden sm:inline">{t.documentation}</span>
             </Link>
             <a
-              href="https://developers.google.com/search/docs/crawling-indexing/googlebot"
+              href={t.googleDocsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
             >
               <Globe size={16} />
-              <span className="hidden sm:inline">Google Docs</span>
+              <span className="hidden sm:inline">{t.googleDocs}</span>
             </a>
+            <div className="ml-2 border-l border-gray-200 pl-2">
+              <LanguageSelector />
+            </div>
           </nav>
         </div>
       </div>
