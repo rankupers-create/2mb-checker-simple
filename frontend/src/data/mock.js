@@ -53,7 +53,7 @@ export const mockFailResult = {
 export const documentationContent = {
   intro: {
     title: "Understanding Google's 2MB Crawl Limit",
-    description: "In 2024, Google officially documented a critical limitation: Googlebot will only crawl and index the first 2 MB of an HTML page. Any content beyond this limit is simply ignored, potentially leaving important parts of your website invisible to search engines."
+    description: "Google officially documented a critical limitation: Googlebot will only crawl and index the first 2 MB of an HTML page. Any content beyond this limit is simply ignored, potentially leaving important parts of your website invisible to search engines."
   },
   sections: [
     {
