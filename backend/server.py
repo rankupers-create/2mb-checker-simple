@@ -1,47 +1,26 @@
 from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel
 from typing import List, Optional
-import uuid
 from datetime import datetime, timezone
 import requests
 import gzip
-import re
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 import time
-
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
-
-# Create the main app without a prefix
-app = FastAPI()
+# Create the main app
+app = FastAPI(title="2MB Limit Checker API")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
-
-
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
 
 # URL Analysis Models
 class UrlAnalyzeRequest(BaseModel):
@@ -113,46 +92,22 @@ def analyze_html_resources(html_content: str, base_url: str) -> dict:
 def calculate_crawlability_score(html_size: int) -> int:
     """Calculate a crawlability score based on HTML size relative to 2MB limit"""
     if html_size > GOOGLEBOT_LIMIT:
-        # Over limit: score decreases based on how much over
         over_percentage = (html_size - GOOGLEBOT_LIMIT) / GOOGLEBOT_LIMIT
         return max(0, int(30 - (over_percentage * 30)))
     elif html_size > GOOGLEBOT_LIMIT * WARNING_THRESHOLD:
-        # Warning zone (80-100% of limit)
         usage_percentage = html_size / GOOGLEBOT_LIMIT
         return int(50 + (1 - usage_percentage) * 100)
     else:
-        # Under 80% of limit
         usage_percentage = html_size / GOOGLEBOT_LIMIT
         return int(70 + (1 - usage_percentage) * 30)
 
-# Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "2MB Limit Checker API"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+@api_router.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @api_router.post("/analyze", response_model=UrlAnalyzeResponse)
 async def analyze_url(request: UrlAnalyzeRequest):
@@ -176,7 +131,7 @@ async def analyze_url(request: UrlAnalyzeRequest):
         
         # Fetch the URL with a timeout and user agent
         headers = {
-            'User-Agent': 'Mozilla/5.0 (compatible; 2MB-Checker/1.0; +https://seo-size-validator.preview.emergentagent.com)',
+            'User-Agent': 'Mozilla/5.0 (compatible; 2MB-Checker/1.0)',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.5',
             'Accept-Encoding': 'gzip, deflate',
@@ -252,7 +207,7 @@ async def analyze_url(request: UrlAnalyzeRequest):
     except requests.exceptions.HTTPError as e:
         raise HTTPException(status_code=400, detail=f"HTTP error: {e.response.status_code} - {e.response.reason}")
     except Exception as e:
-        logger.error(f"Error analyzing URL {url}: {str(e)}")
+        logging.error(f"Error analyzing URL {url}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error analyzing URL: {str(e)}")
 
 # Include the router in the main app
@@ -261,7 +216,7 @@ app.include_router(api_router)
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -272,7 +227,3 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
